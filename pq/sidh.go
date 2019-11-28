@@ -17,16 +17,16 @@ type Sike struct {
 	CipherTextFile  string
 }
 
-func NewSike(pubKeyFile, base64PublicKey, privateKeyFile string) *Sike {
+func NewSike(pubKeyFile, base64PublicKey, privateKeyFile, inputFileName string) *Sike {
 	return &Sike{
 		PubKeyFile:      pubKeyFile,
 		Base64PublicKey: base64PublicKey,
 		PrivateKeyFile:  privateKeyFile,
+		CipherTextFile:  inputFileName,
 	}
 }
 
 func (s *Sike) GenerateKeys() {
-
 	prvB := sidh.NewPrivateKey(sidh.Fp751, sidh.KeyVariantSike)
 	pubB := sidh.NewPublicKey(sidh.Fp751, sidh.KeyVariantSike)
 
@@ -76,6 +76,12 @@ func (s *Sike) Encapsulate() {
 
 	kem.Encapsulate(ct, ssE[:], pubB)
 	s.CipherText = ct
+
+	err = ioutil.WriteFile("CipherText.txt", ct[:], 0777)
+	if err != nil {
+		panic("Error while writing file")
+	}
+	fmt.Println("Cipher Text: ", s.CipherText)
 }
 
 func (s *Sike) Decapsulate() {
@@ -112,7 +118,7 @@ func (s *Sike) Decapsulate() {
 	var ssB = make([]byte, kem.SharedSecretSize())
 
 	kem.Decapsulate(ssB[:kem.SharedSecretSize()], prvB, pubB, ct)
+	fmt.Println("Shared Secret: ", ssB)
+	sEnc := base64.StdEncoding.EncodeToString(ssB[:])
+	fmt.Println("Base64: ", sEnc)
 }
-
-func (s *Sike) EncryptFile() {}
-func (s *Sike) DecryptFile() {}

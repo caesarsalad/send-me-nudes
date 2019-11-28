@@ -18,16 +18,20 @@ var (
 	encryptionMode       bool
 	decryptionMode       bool
 	generationMode       bool
+	encapsulation        bool
+	decapsulation        bool
 )
 
 type common interface {
 	GenerateKeys()
-	EncryptFile()
-	DecryptFile()
 }
 type kem interface {
 	Encapsulate()
 	Decapsulate()
+}
+type fileEncryption interface {
+	EncryptFile()
+	DecryptFile()
 }
 
 func main() {
@@ -40,36 +44,56 @@ func main() {
 	flag.StringVar(&clientPrivateKeyFile, "privatekey", "client_private.key", "Your Private Key File")
 	flag.StringVar(&inputFileName, "i", "file", "file to read")
 	flag.StringVar(&outputFileName, "o", "out", "output file name")
+	flag.BoolVar(&encapsulation, "ec", false, "encapsulate shared secret")
+	flag.BoolVar(&decapsulation, "dc", false, "decapsulate shared secret")
+
 	flag.Parse()
 
 	var calgo common
+	var kemAlgo kem
+	var feAlgo fileEncryption
 
 	switch algo {
 	case "ec25519":
-		calgo = ec.NewEC25519(pubKeyFile, base64Pub, clientPrivateKeyFile, inputFileName, outputFileName)
+		ec25519 := ec.NewEC25519(pubKeyFile, base64Pub, clientPrivateKeyFile, inputFileName, outputFileName)
+		calgo = ec25519
+		feAlgo = ec25519
 	case "sike":
-		calgo = pq.NewSike(pubKeyFile, base64Pub, clientPrivateKeyFile)
+		sike := pq.NewSike(pubKeyFile, base64Pub, clientPrivateKeyFile, inputFileName)
+		calgo = sike
+		kemAlgo = sike
 	}
 
 	switch {
 	case generationMode:
-		fmt.Println(algo, " Generating key pairs...")
-		GenerateKeys(calgo)
+		generateKeys(calgo)
 	case encryptionMode:
-		fmt.Println(algo, " Encrypting file...")
-		EncryptFile(calgo)
+		encryptFile(feAlgo)
 	case decryptionMode:
-		fmt.Println(algo, " Decrypting file...")
-		DecryptFile(calgo)
+		decryptFile(feAlgo)
+	case encapsulation:
+		//_, ok := kemAlgo.(fileEncryption)
+		encapsulate(kemAlgo)
+	case decapsulation:
+		decapsulate(kemAlgo)
 	}
 }
 
-func GenerateKeys(g common) {
+func generateKeys(g common) {
+	fmt.Println(algo, " Generating key pairs...")
 	g.GenerateKeys()
 }
-func EncryptFile(e common) {
+func encryptFile(e fileEncryption) {
+	fmt.Println(algo, " Encrypting file...")
 	e.EncryptFile()
 }
-func DecryptFile(d common) {
+func decryptFile(d fileEncryption) {
+	fmt.Println(algo, " Decrypting file...")
 	d.DecryptFile()
+}
+func encapsulate(k kem) {
+	k.Encapsulate()
+}
+func decapsulate(k kem) {
+	k.Decapsulate()
 }
