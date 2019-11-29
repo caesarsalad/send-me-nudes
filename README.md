@@ -1,4 +1,7 @@
 ## Send Me Nudes
+_____________________________
+
+[![Build Status](https://travis-ci.com/caesarsalad/send-me-nudes.svg?branch=master)](https://travis-ci.com/caesarsalad/send-me-nudes)
 
 > First of all It's just for fun. So Send Me Nudes comes with ABSOLUTELY NO WARRANTY, to the extent permitted by applicable law.
 
