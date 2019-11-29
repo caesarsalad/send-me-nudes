@@ -1,0 +1,17 @@
+language: go
+sudo: false
+go: 
+  - "1.13.x"
+
+before_install:
+  - go get -t -v ./...
+
+matrix:
+  fast_finish: true
+  include:
+  - go: 1.13.x
+    env: GO111MODULE=on
+notifications:
+  email:
+    on_success: never
+    on_failure: always
